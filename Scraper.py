@@ -6,7 +6,8 @@ import time
 from Champion import Champion
 from ChampAbility import Ability
 
-PAGE_LOAD = 0.4
+PAGE_LOAD = 0.5
+FIND_ELEMENT = 0.2
 BASE_SITE = "https://wiki.leagueoflegends.com/en-us/"
 
 class Scraper:
@@ -34,41 +35,82 @@ class Scraper:
 
     def find_element(self, by = None, value:str = None):
         if by!=None:
-            self.browser.find_element(by=by, value=value)
+            result = self.browser.find_element(by=by, value=value)
         else:
-            self.browser.find_element(value=value)
+            result = self.browser.find_element(value=value)
+        time.sleep(FIND_ELEMENT)
+        return result
 
     def read_ability(self, text) -> Ability:
         pass
-
+    
     def load_champ(self, champ_name:str) -> Champion:
         # add check version later
-        
+        champ_name = champ_name.title()
         self.get(BASE_SITE+champ_name)
         
         stats = dict()
         for statName, details in self.stat_map.items():
-            base = None
-            inc = None
-            
-            if "Default" in details["getType"]:
-                node = self.browser.find_element(value=details["span_id"])
-                text = node.text
+            def parseStat(tail):
+                base = None
+                inc = None
                 
-                if "Single" not in details["getType"]:
-                    splits = text.split(" – ")
-                    base = int(splits[0])
-                    cap = int(splits[-1])
-                    inc = (cap - base) /17
-                else:
-                    base = int(text)
-
-                time.sleep(3)
+                def singleSplit(text:str):
+                    text = text.replace("%","")
+                    inc = None
+                    if "Single" not in tail["getType"]:
+                        splits = text.split(" ")
+                        base = float(splits[0])
+                        cap = float(splits[-1])
+                        inc = (cap - base) /17
+                    else:
+                        if "N/A" in text:
+                            base = None
+                        else:
+                            base = float(text)
+                    return base, inc
+                
+                if "Default" in tail["getType"]:
+                    try:
+                        node = self.find_element(by="xpath",value= f"//span[@id='{tail["span_id"]}']")
+                        text = node.text
+                        base, inc = singleSplit(text)
+                    except:
+                        base, inc = None, None
+                        
+                elif "ByLable" in tail["getType"]:
+                    node = self.find_element(by= "xpath", value= f"//a[@title='{tail["title"]}' and text()='{tail["text"]}']")
+                    node = node.find_element(by="xpath", value=r"./../..")
+                    # node = node.find_element(by="xpath", value=r"./../..")
+                    node = node.find_element(by="xpath", value=f"./div[@class='infobox-data-value statsbox']")
+                    text = node.text
+                    base, inc = singleSplit(text)
+                
+                elif "Split" in tail["getType"]:
+                    base, _ = parseStat(tail=tail["Base"])
+                    _, inc = parseStat(tail=tail["Inc"])
+                
+                elif "ToolTip" in tail["getType"]:
+                    node = self.find_element(by="xpath", value=f"//span[@class='glossary tooltips-init-complete' and @data-tip='{tail["data-tip"]}']/../../div[@class='infobox-data-value statsbox']")
+                    text = node.text
+                    base, inc = singleSplit(text)
+                    
+                elif "None" in tail["getType"]:
+                    base = tail["default"]
+                    
+                return base, inc
+            
+            base, inc = parseStat(details)
+            stats[statName] = {"Base":base}
+            if inc:
+                stats[statName]["Inc"] = inc
+        
+        pass
                 
         
         
 sc = Scraper()
-sc.load_champ("Ahri")
+sc.load_champ("Aatrox")
 
         
 

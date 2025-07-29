@@ -3,12 +3,10 @@
     "Version": "V0",
     "Stats":{
         "HealthPoints":{
-            "Id":"HP",
             "Base":100,
             "Increment":5
         },
         "CriticalDamage":{
-            "Id":"Crit. DMG",
             "Base":175
         },
         "ChampStacks":{

@@ -25,12 +25,12 @@
     },
     "ResourceRegen":{
         "getType":"Default",
-        "span_id":"ResourceRegen_lvl"
+        "span_id":"ResourceRegen__lvl"
     },
     "CritDamage":{
         "getType":"ByLable_Single",
         "title":"Critical damage",
-        "class":"infobox-data-value statsbox"
+        "text":"Crit. DMG"
     },
     "MovementSpeed":{
         "getType":"Default_Single",
@@ -65,5 +65,9 @@
     "AttackRange":{
         "getType":"Default_Single",
         "span_id":"AttackRange_"
+    },
+    "ChampStaks":{
+        "getType":"None",
+        "default": 0
     }
 }
