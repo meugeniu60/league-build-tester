@@ -1,0 +1,69 @@
+{
+    "HealthPoints":{
+        "getType":"Default",
+        "span_id":"Health__lvl"
+    },
+    "HealthRegen":{
+        "getType":"Default",
+        "span_id":"HealthRegen__lvl"
+    },
+    "Armor":{
+        "getType":"Default",
+        "span_id":"Armor__lvl"
+    },
+    "MagicResist":{
+        "getType":"Default",
+        "span_id":"MagicResist__lvl"
+    },
+    "AttackDamage":{
+        "getType":"Default",
+        "span_id":"AttackDamage__lvl"
+    },
+    "ResourceBar":{
+        "getType":"Default",
+        "span_id":"ResourceBar__lvl"
+    },
+    "ResourceRegen":{
+        "getType":"Default",
+        "span_id":"ResourceRegen_lvl"
+    },
+    "CritDamage":{
+        "getType":"ByLable_Single",
+        "title":"Critical damage",
+        "class":"infobox-data-value statsbox"
+    },
+    "MovementSpeed":{
+        "getType":"Default_Single",
+        "span_id":"MovementSpeed_"
+    },
+    "AttackRange_":{
+        "getType":"Default_Single",
+        "span_id":"AttackRange_"
+    },
+    "AttackSpeed":{
+        "getType":"Split",
+        "Base":{
+            "getType":"ByLable_Single",
+            "title":"Attack speed",
+            "text":"Base AS"
+        },
+        "Inc":{
+            "getType":"Default",
+            "span_id":"AttackSpeedBonus__lvl"
+        }
+    },
+    "ASRatio":{
+        "getType":"ToolTip_Single",
+        "data-tip":"Attack ratio",
+        "text":"AS ratio"
+    },
+    "Whindup":{
+        "getType":"ToolTip_Single",
+        "data-tip":"Attack windup",
+        "text":"Windup%"
+    },
+    "AttackRange":{
+        "getType":"Default_Single",
+        "span_id":"AttackRange_"
+    }
+}

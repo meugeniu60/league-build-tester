@@ -1,0 +1,73 @@
+{
+    "Name":"AAtrox",
+    "Version": "V0",
+    "Stats":{
+        "HealthPoints":{
+            "Id":"HP",
+            "Base":100,
+            "Increment":5
+        },
+        "CriticalDamage":{
+            "Id":"Crit. DMG",
+            "Base":175
+        },
+        "ChampStacks":{
+            "Base":0
+        }
+    },
+    "Abilities":[
+        {
+            "Name":"Ability or pasive name*Index",
+            "FullText":"Multiline Text of the ability",
+            "Types":[
+                "AAEnhance",
+                "Shot",
+                "Steroid"
+            ],
+            "Activation":[
+                "Cooldown",
+                "Auto-Cooldown",
+                "Always",
+                "Toggle"
+            ],
+            "Stages":[
+                1, // Most Pasives
+                3, // Most Ults
+                4, // Most Abilities
+                5, // Some Abilities
+                18 // Some Pasives
+            ],
+            "EffectMatrix":[ // Stages
+                [   // Different effects
+                    {
+                        "Effect":[
+                            "PhysicalDamage",
+                            "MagicDamage",
+                            "TrueDamage",
+                            "*StatName*Increase",
+                            "Shield"
+                        ],
+                        "Scaling":{
+                            "Base":100,
+                            "*StatName*":{
+                                "Value":0.9,
+                                "Base":false
+                            },
+                            "Multiplicative":{
+                                "Base":100,
+                                "*StatName1*":{
+                                    "Value":0.9,
+                                    "Base":false
+                                },
+                                "*StatName2*":{
+                                    "Value":0.9,
+                                    "Base":false
+                                }
+                            }
+                        }
+                    }
+                ]
+            ]
+        }
+    ]
+}
