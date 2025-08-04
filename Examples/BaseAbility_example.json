@@ -1,0 +1,47 @@
+{
+    "name":"Cursed Touch",
+    "text":"complete\n text",
+    "effects":[
+        {
+            "type":[
+                "magic damage",
+                "physical damage",
+                "true damage",
+                "shield",
+                "stat* buff",
+                "stat* debuff"
+            ],
+            "expresion":"10% *pre-mitigation_magic-damage",
+            "values":[
+                "pre-mitigation_magic-damage"
+            ],
+            "duration":3
+        }
+    ],
+    "cc":{
+        "type":[
+            "stun","slow","silence","snare","supress","knock-up"
+        ],
+        "duration":1,
+        "procent":99 //for slow
+    },
+    "cost":"N/A",
+    "cooldown":{
+        "type":[
+            "recharge",
+            "static",
+            "aply on"
+        ],
+        "static":3,
+        "reduce-by":[
+            {
+                "by":[
+                    "attack",
+                    "ability"
+                ],
+                "procent":false, ///procent or static
+                "value":3
+            }
+        ]
+    }
+}
