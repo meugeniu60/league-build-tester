@@ -11,6 +11,7 @@ PAGE_LOAD = 0.5
 FIND_ELEMENT = 0.2
 BASE_SITE = "https://wiki.leagueoflegends.com/en-us/"
 
+
 def is_float(s:str):
     return s.replace(".","", 1).isnumeric()
 
@@ -83,11 +84,17 @@ class Scraper:
         with open("StatsMap.json", "r") as file:
             self.stat_map = json.load(file)
     
-    def get(self, site:str):
+    def get(self, site:str = None):
+        """Changes page to site
+        If page is not a website it will enter BASE_SITE, looking for a page titled *site*
+
+        Args:
+            site (str, optional): Site or page you want to access. Defaults to None.
+        """
         if not site.startswith("http"):
-            print(f"{site} is not a website")
-            return        
-        self.browser.get(site)
+            self.browser.get(BASE_SITE+site.removeprefix(r"/en-us/"))
+        else:
+            self.browser.get(site)
         time.sleep(PAGE_LOAD)
 
     def find_element(self, by = None, value:str = None):
@@ -223,34 +230,57 @@ class Scraper:
                 
                 abilities.append(Ability(name, effects, **extra))
                 
-                
-            
-            
-            
             champ_obj.update_abilities(abilities)
             # Abilities Got
             
             self.champ = champ_obj
             
-            
             # Save champ
             Saves.save_champ(champ_obj)
                 
+    
+    def load_item(self, item:str):
+        pass
+    
+    def update_items(self, ):
+        # Collect names
+        d_items = dict()
+        self.get("Item#List_of_Items")
         
+        # Get grid
+        grid = self.find_element("id", "item-grid")
+        grid = grid.find_element("id", "grid")
+        grid = grid.find_element("id", "item-grid")
+        
+        titles = grid.find_elements("xpath", "./dl")
+        it_list = grid.find_elements("xpath", "./div[@class='tlist']")
+        for i in range(len(titles)):
+            it_type = titles[i].text
+            if it_type == "Removed items":
+                continue
+            d_items[it_type] = list()
+            
+            it_links = it_list[i].find_elements("xpath", ".//a")
+            for it_link in it_links:
+                d_items[it_type].append(it_link.get_attribute("href"))
+        
+        # Get items
+            
+            
+
+
 import os
-    
-
-if os.path.exists("Saves\\Champs\\Aatrox_V25.12.json"):
-    os.remove("Saves\\Champs\\Aatrox_V25.12.json")
+# if os.path.exists("Saves\\Champs\\Aatrox_V25.12.json"):
+#     os.remove("Saves\\Champs\\Aatrox_V25.12.json")
 sc = Scraper()
-sc.load_champ("Aatrox")
-sc.load_champ("Aatrox")
+# sc.load_champ("Aatrox")
+# sc.load_champ("Aatrox")
 
-file_path = "log.json"
-if os.path.exists(file_path):
-    os.remove(file_path)
+# file_path = "log.json"
+# if os.path.exists(file_path):
+#     os.remove(file_path)
     
-with open(file_path, 'x') as file:
-    file.write(json.dumps(sc.champ.__dict__,indent=4))
+# with open(file_path, 'xs') as file:
+#     file.write(json.dump(sc.champ,indent=4))
         
-
+sc.update_items()

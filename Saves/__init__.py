@@ -1,6 +1,6 @@
 import json
 import os
-
+import pickle
 from Champion import Champion
 
 VER_BASE = 100
@@ -88,9 +88,9 @@ def save_champ(champ:Champion):
     if os.path.exists(file_path):
         os.remove(file_path)
     # TODO make serializer
-    with open(file_path, 'x') as file:
-        file.write(json.dumps(champ, indent=4))
+    with open(file_path, 'xb') as file:
+        pickle.dump(champ, file)
     
 def load_champ(champ_name:str, ver:str):
-    with open(champ_file_from_version(champ_name, ver), 'r') as file:
-        return Champion(json.loads(file.read()))
+    with open(champ_file_from_version(champ_name, ver), 'rb') as file:
+        return Champion(pickle.load(file))
