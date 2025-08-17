@@ -6,6 +6,7 @@ import time
 import Saves
 from Champion import Champion
 from ChampAbility import Ability
+from Item import Item
 
 PAGE_LOAD = 0.5
 FIND_ELEMENT = 0.2
@@ -240,9 +241,78 @@ class Scraper:
                 
     
     def load_item(self, item:str):
-        pass
+        self.get(item)
+        
+        it_name = item.removeprefix("https://wiki.leagueoflegends.com/en-us/")
+        infobox = self.find_element("class name", "infobox")
+        # header = infobox.find_elements("xpath", "./div[contains(@class, header)]")
+        section = infobox.find_elements("xpath", "./div")
+        
+        def index(title:str) -> int:
+            try:
+                head = infobox.find_element("xpath", f'./div[contains(@class, "header") and text()="{title}"]')
+                return section.index(head)
+            except:
+                return -1
+        
+        node_stats = section[index("Stats")+1]
+        stats = dict()
+        for div in node_stats.find_elements("xpath", './/div[@class="infobox-data-row"]'):
+            div = div.find_element("class name", "infobox-data-value")
+            if not div.text:
+                continue
+            num, *stat = div.text.split()
+            if num[-1].isdigit():
+                num = int(num.strip('+%'))
+                
+                stat = " ".join(stat)
+                stats[stat] = num
+            else:
+                stats["gold per 10 seconds"] = float(stat[1])
+        stats["Name"] = it_name
+        
+        passive_abilities = list()
+        passive_index = index("Passive")
+        if passive_index != -1:
+            node_passive = section[passive_index + 1]
+            for div in node_passive.find_elements("class name", "infobox-data-row"):
+                div = div.find_element("class name", "infobox-data-value")
+                passive_abilities.append(div.text)
+        
+        active_abilities = list()
+        active_index = index("Active")
+        if active_index != -1:
+            node_active = section[active_index + 1]
+            for div in node_active.find_elements("class name", "infobox-data-row"):
+                div = div.find_element("class name", "infobox-data-value")
+                active_abilities.append(div.text)
+                
+        recipe_index = index("Recipe")
+        div_cost = section[recipe_index + 1]
+        if div_cost.get_attribute("class") != "infobox-section-cell":
+            div_components = div_cost
+            div_cost = section[recipe_index + 2]
+            
+            # Get components
+            recipe = list()
+            for div in div_components.find_elements("xpath", ".//a"):
+                recipe.append(div.get_attribute("href").removeprefix("https://wiki.leagueoflegends.com/en-us/"))
+                
+            recipe.remove('Gold')
+            recipe.append(div_components.text.strip(" +%"))
+            stats["Recipe"] = recipe
+        
+        # Get total cost/sell
+        for div in div_cost.find_elements("class name", "infobox-data-row"):
+            lable = div.find_element("class name", "infobox-data-label").text
+            if lable not in ["Cost", "Sell"]:
+                continue
+            stats[lable] = div.find_element("class name", "infobox-data-value").text
+        
+        return Item(passive=passive_abilities, active=active_abilities, **stats)
+        
     
-    def update_items(self, ):
+    def update_items(self, name):
         # Collect names
         d_items = dict()
         self.get("Item#List_of_Items")
@@ -256,16 +326,21 @@ class Scraper:
         it_list = grid.find_elements("xpath", "./div[@class='tlist']")
         for i in range(len(titles)):
             it_type = titles[i].text
-            if it_type == "Removed items":
+            if it_type != name:
                 continue
             d_items[it_type] = list()
             
             it_links = it_list[i].find_elements("xpath", ".//a")
             for it_link in it_links:
                 d_items[it_type].append(it_link.get_attribute("href"))
-        
+                
         # Get items
-            
+        items = []
+        for item_link in d_items[name]:
+            items += [self.load_item(item_link)]
+        
+        
+        
             
 
 
@@ -283,4 +358,4 @@ sc = Scraper()
 # with open(file_path, 'xs') as file:
 #     file.write(json.dump(sc.champ,indent=4))
         
-sc.update_items()
+sc.update_items("Legendary items")

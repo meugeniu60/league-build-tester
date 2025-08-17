@@ -94,3 +94,7 @@ def save_champ(champ:Champion):
 def load_champ(champ_name:str, ver:str):
     with open(champ_file_from_version(champ_name, ver), 'rb') as file:
         return Champion(pickle.load(file))
+
+def save_item_list()
+    # To do
+    pass

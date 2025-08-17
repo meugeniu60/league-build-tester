@@ -11,20 +11,26 @@ class Item(object):
         for key, value in stats.items:
             self.stats[key] = value
         
-    def add_ability(self,abil:IAbility|list, reset=False):
-        is_list = isinstance(abil, list)
-        if reset:
-            if is_list:
-                self.abili = abil
-            else:
-                self.abili = [abil]
-            return
+    def add_ability(self, passive:IAbility|str|list=None, active:IAbility|str|list=None):
+        if not passive and not active:
+            return -1
+        def refine_abil(abil):
+            if not isinstance(abil, list):
+                abil = [abil]
+            return list(map(lambda x: x if(isinstance(x, IAbility)) else IAbility(x), abil))
         
-        if is_list:
-            self.abili.extend(abil)
-        else:
-            self.abili.append(abil)
+        if active:
+            active = refine_abil(active)
+            self.active = active[-1]
+        if passive:
+            passive = refine_abil(passive)
+            self.passive = passive
     
-    def __init__(self, abil:IAbility|list=None, **stats):
+    def __init__(self, passive:IAbility|str|list=None, active:IAbility|str|list=None, **stats):
+        self.name = stats.pop("Name")
+        self.cost = stats.pop("Cost")
+        self.sell = stats.pop("Sell")
+        self.recipe = stats.pop("Recipe", None)
+        
         self.add_stats(reset=True, **stats)
-        self.add_ability(reset=True, abil=abil)
+        self.add_ability(passive=passive, active=active)
