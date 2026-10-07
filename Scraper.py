@@ -13,62 +13,6 @@ FIND_ELEMENT = 0.2
 BASE_SITE = "https://wiki.leagueoflegends.com/en-us/"
 
 
-def is_float(s:str):
-    return s.replace(".","", 1).isnumeric()
-
-def clean_stat(stat:str|list) -> dict:
-    if isinstance(stat, str):
-        splited = stat.split()
-    else:
-        splited = stat
-        
-    # Result values
-    base = list()
-    text = ""
-    stages = 1
-    scaling = list()
-    is_procent = False
-    
-    i = 0
-    finished = False
-    in_stages = is_float(splited[i])
-
-    while not finished:
-        if i == len(splited) - 1:
-            finished = True
-        elif i >= len(splited):
-            break
-        
-        if in_stages:
-            if splited[i].endswith("%"):
-                is_procent = True
-                splited[i] = splited[i][:-1]
-                
-            while i<len(splited) and not is_float(splited[i]):
-                i += 1
-                
-            base.append(float(splited[i]))
-            in_stages = False
-        
-        elif splited[i] in '/–':
-            in_stages = True
-            stages += 1
-        
-        elif splited[i] == '(+':
-            i += 1
-            j = i
-            while not splited[i].endswith(')'):
-                i += 1
-            splited[i] = splited[i].removesuffix(')')
-            scaling.append(clean_stat(splited[j:i+1]))
-        
-        else:
-            text += splited[i] + ' '
-            
-        i += 1
-    
-    return dict(base=base, text=text, stages=stages, scaling=scaling, is_procent=is_procent)
-
 class Scraper:
     """Opens browser
         get_champion = 
@@ -131,7 +75,7 @@ class Scraper:
         saved_version = Saves.get_champ_save_ver(champ_name)
         
         if saved_version and Saves.compare_version(saved_version, current_version) < 0:
-            self.champ = Saves.load_champ(champ_name, saved_version)
+            self.champ = Champion(Saves.load_champ(champ_name, saved_version))
         else:
             # Scrape Champ
             champ_obj = Champion(name=champ_name, version=current_version)
@@ -200,36 +144,45 @@ class Scraper:
             abil_containers = self.find_elements("class name", "skill_header")
             for container in abil_containers:
                 container = container.find_element("class name", "ability-info-container")
-                
                 wrapper = container.find_element("class name", "ability-info-stats__wrapper")
-                name = wrapper.text
+                titlecard = wrapper.find_element("class name", "ability-info-stats__ability")
+                additional_info = wrapper.find_element("class name", "ability-info-stats__list")
+                name = titlecard.text
+                text = container.text
                 
-                extra_windows = wrapper.find_elements("xpath", "./div[@class='ability-info-stats__list']/div")
-                extra = dict()
-                for window in extra_windows:
-                    extra[window.find_element("class name", "ability-info-stats__stat-label").text] = clean_stat(window.find_element("class name", "ability-info-stats__stat-value").text)
+                if flavor := container.find_element("class name", "ability-info-flavor"):
+                    text = text.removesuffix(flavor.text)
+                text += "\n" + additional_info.text
+                # extra_windows = wrapper.find_elements("xpath", "./div[@class='ability-info-stats__list']/div")
+                # extra = dict()
+                # for window in extra_windows:
+                #     extra[window.find_element("class name", "ability-info-stats__stat-label").text.strip(":.;")] = clean_stat(window.find_element("class name", "ability-info-stats__stat-value").text)
                 
-                container = container.find_element("class name", "ability-info-content")
+                # container = container.find_element("class name", "ability-info-content")
                     
-                effects = list()
-                effect_windows = container.find_elements("class name", "ability-info-row")
-                for window in effect_windows:
-                    effect = dict()
-                    effect["description"] = window.find_element("class name", "ability-info-description").text
+                # effects = list()
+                # effect_windows = container.find_elements("class name", "ability-info-row")
+                # for window in effect_windows:
+                #     effect = dict()
+                #     effect["description"] = window.find_element("class name", "ability-info-description").text
                     
-                    spec_windows = window.find_elements("class name", "ability-info-stats")
-                    if spec_windows:
-                        specs = dict()
-                        spec_windows = spec_windows[0].find_elements("class name", "skill-tabs")
-                        for window in spec_windows:
-                            title = window.find_element("xpath", ".//span[@class='template_lc']").text
-                            desc = window.text.removeprefix(title).strip(" \n►")
-                            specs[title] = clean_stat(desc)
-                        effect["specs"] = specs
+                #     spec_windows = window.find_elements("class name", "ability-info-stats")
+                #     if spec_windows:
+                #         specs = dict()
+                #         spec_windows = spec_windows[0].find_elements("class name", "skill-tabs")
+                #         for window in spec_windows:
+                #             title = window.find_element("xpath", ".//span[@class='template_lc']").text
+                #             desc = window.text.removeprefix(title).strip(" \n►")
+                #             specs[title] = clean_stat(desc)
+                #         effect["specs"] = specs
                     
-                    effects.append(effect)
+                #     effects.append(effect)
                 
-                abilities.append(Ability(name, effects, **extra))
+                # abilities.append(Ability(name, effects, **extra))
+                abilities.append({
+                    "name": name,
+                    "text": text
+                })
                 
             champ_obj.update_abilities(abilities)
             # Abilities Got
@@ -277,15 +230,15 @@ class Scraper:
             node_passive = section[passive_index + 1]
             for div in node_passive.find_elements("class name", "infobox-data-row"):
                 div = div.find_element("class name", "infobox-data-value")
-                passive_abilities.append(div.text)
+                passive_abilities.append(Ability(it_name+"_Active", div.text))
         
-        active_abilities = list()
+
         active_index = index("Active")
         if active_index != -1:
             node_active = section[active_index + 1]
             for div in node_active.find_elements("class name", "infobox-data-row"):
                 div = div.find_element("class name", "infobox-data-value")
-                active_abilities.append(div.text)
+                active_ability = Ability(it_name+"_Active", div.text)
                 
         recipe_index = index("Recipe")
         div_cost = section[recipe_index + 1]
@@ -309,7 +262,7 @@ class Scraper:
                 continue
             stats[lable] = div.find_element("class name", "infobox-data-value").text
         
-        return Item(passive=passive_abilities, active=active_abilities, **stats)
+        return Item(passive=passive_abilities, active=active_ability, **stats)
         
     
     def update_items(self, name):
@@ -339,7 +292,67 @@ class Scraper:
         for item_link in d_items[name]:
             items += [self.load_item(item_link)]
         
+
+# def clean_stat(stat:str|list) -> dict:
+#     """_summary_
+
+#     Args:
+#         stat (str | list): string like "10 / 50 / 200 / 250 (+ 15% bonus ad)(+ 30% ap) magic damage" or same string .split()
+
+#     Returns:
+#         (cleaned stat)
+#         dict:   base:       list(10, 50, 200, 250)
+#                 text:       "magic damage"
+#                 is_procent  (bool)
+#                 scaling     list(cleaned_stat("15% bonus ad"), cleaned_stat("30% ap"))
+         
+#     """
+#     if isinstance(stat, str):
+#         splited = stat.split()
+#     else:
+#         splited = stat
         
+#     # Result values
+#     base = list()
+#     text = ""
+#     scaling = list()
+#     is_procent = False
+    
+#     i = 0
+#     slen = len(splited)
+#     stage_state = True
+#     while i < slen:
+#         if stage_state:
+#             if splited[i].endswith("%"):
+#                 is_procent = True
+#                 splited[i] = splited[i].strip("%")
+                
+#             base.append(float(splited[i]))
+#             stage_state = False
+        
+#         elif splited[i] in '/–':
+#             stage_state = True
+            
+#         elif splited[i] == 'per':
+#             i += 1
+#             b = float(splited[i].strip("%."))
+#             base = [num / b for num in base]
+            
+#         elif splited[i] == '(+':
+#             i += 1
+#             j = slen - 1
+            
+#             while not splited[j].endswith(')'):
+#                 j -= 1
+#             splited[j] = splited[j].removesuffix(')')
+#             scaling.append(clean_stat(splited[i:j+1]))
+#             i = j
+#         else:
+#             text += splited[i]+" "
+#         i += 1
+    
+#     return dict(base=base, text=text, scaling=scaling, is_procent=is_procent)
+  
         
             
 
@@ -349,8 +362,8 @@ import os
 #     os.remove("Saves\\Champs\\Aatrox_V25.12.json")
 sc = Scraper()
 # sc.load_champ("Aatrox")
-# sc.load_champ("Aatrox")
-
+sc.load_champ("Jinx")
+print(sc.champ.abil)
 # file_path = "log.json"
 # if os.path.exists(file_path):
 #     os.remove(file_path)

@@ -1,6 +1,4 @@
-class IAbility(object):
-    def __init__(self, desc:str):
-        self.description = desc
+from ChampAbility import Ability
 
 class Item(object):
     def add_stats(self, reset=False, **stats):
@@ -11,22 +9,24 @@ class Item(object):
         for key, value in stats.items:
             self.stats[key] = value
         
-    def add_ability(self, passive:IAbility|str|list=None, active:IAbility|str|list=None):
+    def add_ability(self, passive:Ability|str|list=None, active:Ability|str|list=None):
         if not passive and not active:
             return -1
         def refine_abil(abil):
             if not isinstance(abil, list):
                 abil = [abil]
-            return list(map(lambda x: x if(isinstance(x, IAbility)) else IAbility(x), abil))
+            return list(map(lambda x: x if(isinstance(x, Ability)) else Ability(name=self.name, desc_obj=x), abil))
         
         if active:
             active = refine_abil(active)
             self.active = active[-1]
         if passive:
             passive = refine_abil(passive)
-            self.passive = passive
+            if not hasattr(self, passive):
+                self.passive = []
+            self.passive.append (passive)
     
-    def __init__(self, passive:IAbility|str|list=None, active:IAbility|str|list=None, **stats):
+    def __init__(self, passive:Ability|str|list=None, active:Ability|str|list=None, **stats):
         self.name = stats.pop("Name")
         self.cost = stats.pop("Cost")
         self.sell = stats.pop("Sell")

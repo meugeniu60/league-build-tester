@@ -1,7 +1,6 @@
 import json
 import os
 import pickle
-from Champion import Champion
 
 VER_BASE = 100
 CLEAN_OLD_VERSIONS = True
@@ -83,18 +82,27 @@ def get_champ_save_ver(name:str):
     
     return  saved_versions[0]
 
-def save_champ(champ:Champion):
+def save(obj, file, open_setting = 'xb'):
+    if os.path.exists(file) and 'x' in open_setting:
+        os.remove(file)
+    with open(file, open_setting) as _file:
+        pickle.dump(obj, _file)
+
+def load(file, open_setting = 'rb'):
+    with open(file, open_setting) as _file:
+        return pickle.load(_file)
+
+def save_champ(champ):
     file_path = champ_file_from_version(champ.name, champ.version)
-    if os.path.exists(file_path):
-        os.remove(file_path)
-    # TODO make serializer
-    with open(file_path, 'xb') as file:
-        pickle.dump(champ, file)
+    save(champ, file_path)
     
 def load_champ(champ_name:str, ver:str):
-    with open(champ_file_from_version(champ_name, ver), 'rb') as file:
-        return Champion(pickle.load(file))
+    champ_file = champ_file_from_version(champ_name, ver)
+    return load(champ_file)
 
-def save_item_list()
+def add_item_to_save(item):
+    pass
+
+def save_item_list(l:list):
     # To do
     pass

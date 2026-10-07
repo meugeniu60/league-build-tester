@@ -1,0 +1,18 @@
+[
+    {
+        "name":"on-hit",
+        "regex":"on-hit",
+        "aditional":[
+            {
+                "name":"every-x",
+                "regex":"(\\w*|\\d*)\\sstack",
+                "group":1
+            }
+        ],
+        "hooks":"on-hit-hook"
+    },
+    {
+        "name":"on-hit-hook",
+        "regex":"applyies on-hit"
+    }
+]
